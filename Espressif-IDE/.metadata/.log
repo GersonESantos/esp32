@@ -659,3 +659,12 @@ This warning can be switched off on the Team > Git > Confirmations and Warnings 
 
 !ENTRY com.espressif.idf.core 1 0 2025-04-13 15:25:16.468
 !MESSAGE Ignoring esp_idf.json settings as it was configured earilier and idf_path is similar.
+
+!ENTRY com.espressif.idf.core 1 0 2025-04-13 15:27:05.531
+!MESSAGE clangd: C:\Espressif\tools\esp-clang\16.0.1-fe4f10a809\esp-clang\bin\clangd.exe
+
+!ENTRY com.espressif.idf.core 1 0 2025-04-13 15:27:05.531
+!MESSAGE toolchain path: null
+
+!ENTRY com.espressif.idf.core 1 0 2025-04-13 15:27:05.532
+!MESSAGE toolchain path: null
