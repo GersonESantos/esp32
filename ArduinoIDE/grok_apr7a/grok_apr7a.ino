@@ -1,4 +1,6 @@
 #include <WiFi.h>
+#include <Adafruit_GFX.h>
+#include <Adafruit_SH110X.h>
 
 // Credenciais do WiFi - Substitua pelos seus dados
 const char* ssid = "BRUGER_2G";      // Nome da sua rede WiFi
