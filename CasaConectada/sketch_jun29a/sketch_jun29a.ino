@@ -2,18 +2,18 @@
 #include <PubSubClient.h>
 #include "DHT.h"
 
-#define DHTPIN 2
+#define DHTPIN 26
 #define DHTTYPE DHT22
 DHT dht(DHTPIN, DHTTYPE);
 
-const char* ssid = "SEU_WIFI";
-const char* password = "SENHA_WIFI";
+const char* ssid = "BRUGER_2G";
+const char* password = "Gersones68";
 const char* mqtt_server = "broker.emqx.io";
 
 WiFiClient espClient;
 PubSubClient client(espClient);
 
-#define LED_SALA 5
+#define LED_SALA 13
 #define LED_QUARTO 18
 #define LED_COZINHA 19
 
