@@ -85,13 +85,13 @@ E o LED deve ligar e desligar conforme os comandos enviados do app.
 
 ---
 
-Com certeza! Aqui está o mesmo `README.md` com a mesma estrutura e explicações, mas sem os blocos de código-fonte, conforme solicitado.
+
 
 ---
 
 # Projeto: Controle de LED com ESP32 via MQTT e Interface Web
 
-> Parabéns! Você construiu um projeto de Internet das Coisas (IoT) completo e funcional, do início ao fim. Agora você tem:
+
 >
 > * Um dispositivo físico (ESP32) que pode ser controlado tanto por um botão local quanto por comandos remotos.
 > * Uma interface web que funciona como um painel de controle, enviando comandos e mostrando o status do dispositivo em tempo real.
