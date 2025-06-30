@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <title>Controle do LED via MQTT</title>
+  <script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f4f4f4;
+      text-align: center;
+      margin-top: 50px;
+    }
+    #status {
+      font-size: 2em;
+      font-weight: bold;
+      color: #333;
+      height: 40px; /* Adicionado para evitar que o layout pule */
+    }
+    /* --- NOVO CSS PARA OS BOTÕES --- */
+    .botoes-container {
+      margin-top: 20px;
+    }
+    button {
+      font-size: 1.2em;
+      padding: 10px 20px;
+      margin: 0 10px;
+      cursor: pointer;
+      border: none;
+      border-radius: 5px;
+      color: white;
+    }
+    #btnLigar {
+      background-color: #28a745; /* Verde */
+    }
+    #btnDesligar {
+      background-color: #dc3545; /* Vermelho */
+    }
+  </style>
+</head>
+<body>
+  <h1>Controle e Status do LED (MQTT)</h1>
+  <div id="status">Conectando...</div>
+
+  <div class="botoes-container">
+    <button id="btnLigar">Ligar LED</button>
+    <button id="btnDesligar">Desligar LED</button>
+  </div>
+
+  <script>
+    const clientId = 'webclient_' + Math.random().toString(16).substr(2, 8);
+    const client = mqtt.connect('wss://broker.emqx.io:8084/mqtt', {
+      clientId: clientId
+    });
+
+    const statusEl = document.getElementById("status");
+
+    client.on('connect', function () {
+      statusEl.textContent = "Conectado!";
+      statusEl.style.color = "#333";
+      client.subscribe("casa/status_led");
+    });
+
+    client.on('message', function (topic, message) {
+      const status = message.toString();
+      statusEl.textContent = "Status do LED: " + status;
+      statusEl.style.color = (status === "Ligado") ? "green" : "red";
+    });
+
+    client.on('error', function (err) {
+      statusEl.textContent = "Erro ao conectar: " + err.message;
+      statusEl.style.color = "black";
+    });
+
+    // --- NOVO JAVASCRIPT PARA OS BOTÕES ---
+    const btnLigar = document.getElementById('btnLigar');
+    const btnDesligar = document.getElementById('btnDesligar');
+    
+    // Tópico para onde os comandos serão publicados
+    const topicComando = "casa/led13";
+
+    btnLigar.addEventListener('click', function() {
+      console.log('Publicando ON para ' + topicComando);
+      client.publish(topicComando, 'ON');
+    });
+
+    btnDesligar.addEventListener('click', function() {
+      console.log('Publicando OFF para ' + topicComando);
+      client.publish(topicComando, 'OFF');
+    });
+
+  </script>
+</body>
+</html>
