@@ -66,7 +66,7 @@ No **Serial Monitor da IDE Arduino**, você deve ver:
 ```
 Conectando ao WiFi: BRUGER_2G
 WiFi conectado com sucesso!
-IP: 192.168.X.X
+IP: 192.168.0.116
 Tentando conectar ao broker MQTT...Conectado!
 Comando recebido: ON
 Comando recebido: OFF
