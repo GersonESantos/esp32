@@ -11,7 +11,8 @@
 
 DHT_Unified dht(DHTPIN, DHTTYPE); // Cria uma instância do sensor DHT
 
-// --- Configurações do OLED ---
+
+
 #define OLED_SDA 21 // Pino SDA do ESP32 (data)
 #define OLED_SCL 22 // Pino SCL do ESP32 (clock)
 #define OLED_RESET -1 // Pino de reset do OLED (use -1 para não usar ou conectar ao RST)
