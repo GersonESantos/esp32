@@ -1,0 +1,121 @@
+/*
+ * Example for SinricPro Contactsensor device:
+ * - Setup contactsensor device
+ * - Checks a contact sensor connected to CONTACT_PIN and send event if state changed
+ *
+ * If you encounter any issues:
+ * - check the readme.md at https://github.com/sinricpro/esp8266-esp32-sdk/blob/master/README.md
+ * - ensure all dependent libraries are installed
+ *   - see https://github.com/sinricpro/esp8266-esp32-sdk/blob/master/README.md#arduinoide
+ *   - see https://github.com/sinricpro/esp8266-esp32-sdk/blob/master/README.md#dependencies
+ * - open serial monitor and check whats happening
+ * - check full user documentation at https://sinricpro.github.io/esp8266-esp32-sdk
+ * - visit https://github.com/sinricpro/esp8266-esp32-sdk/issues and check for existing issues or open a new one
+ */
+
+
+
+#ifdef ENABLE_DEBUG
+  #define DEBUG_ESP_PORT Serial
+  #define NODEBUG_WEBSOCKETS
+  #define NDEBUG
+#endif
+
+#include <Arduino.h>
+#if defined(ESP8266)
+  #include <ESP8266WiFi.h>
+#elif defined(ESP32) || defined(ARDUINO_ARCH_RP2040)
+  #include <WiFi.h>
+#endif
+
+#include "SinricPro.h"
+#include "SinricProContactsensor.h"
+
+#define WIFI_SSID         "home"
+#define WIFI_PASS         "Home@135711"
+#define APP_KEY           "e71be708-4b89-4368-bb36-246791e3e8e8"
+#define APP_SECRET        "818424e2-cd8c-4f78-af36-6edaa53639eb-14c8c67b-e45f-415b-a20d-0526aa43be10"
+#define CONTACT_ID        "68d031fcad5e91d6f439cc02"  
+#define BAUD_RATE         115200              // Change baudrate to your need
+
+#define CONTACT_PIN       35                  // PIN where contactsensor is connected to
+                                              // LOW  = contact is open
+                                              // HIGH = contact is closed
+
+bool lastContactState = false;
+unsigned long lastChange = 0;
+
+/**
+ * @brief Checks contactsensor connected to CONTACT_PIN
+ *
+ * If contactsensor state has changed, send event to SinricPro Server
+ * state from digitalRead():
+ *      HIGH = contactsensor is closed
+ *      LOW  = contactsensor is open
+ */
+void handleContactsensor() {
+  if (SinricPro.isConnected() == false) {
+    Serial.printf("Not connected to Sinric Pro...!\r\n");
+    return; 
+  }
+
+  unsigned long actualMillis = millis();
+  if (actualMillis - lastChange < 250) return;          // debounce contact state transitions (same as debouncing a pushbutton)
+
+  bool actualContactState = digitalRead(CONTACT_PIN);   // read actual state of contactsensor
+
+  if (actualContactState != lastContactState) {         // if state has changed
+    Serial.printf("Contactsensor is %s now\r\n", actualContactState?"closed":"open");
+    lastContactState = actualContactState;              // update last known state
+    lastChange = actualMillis;                          // update debounce time
+    SinricProContactsensor &myContact = SinricPro[CONTACT_ID]; // get contact sensor device
+    myContact.sendContactEvent(actualContactState);      // send event with actual state
+  }
+}
+
+// setup function for WiFi connection
+void setupWiFi() {
+  Serial.printf("\r\n[Wifi]: Connecting");
+  #if defined(ESP8266)
+    WiFi.setSleepMode(WIFI_NONE_SLEEP); 
+    WiFi.setAutoReconnect(true);
+  #elif defined(ESP32)
+    WiFi.setSleep(false); 
+    WiFi.setAutoReconnect(true);
+  #endif
+
+  WiFi.begin(WIFI_SSID, WIFI_PASS);
+
+  while (WiFi.status() != WL_CONNECTED) {
+    Serial.printf(".");
+    delay(250);
+  }
+  IPAddress localIP = WiFi.localIP();
+  Serial.printf("connected!\r\n[WiFi]: IP-Address is %d.%d.%d.%d\r\n", localIP[0], localIP[1], localIP[2], localIP[3]);
+}
+
+// setup function for SinricPro
+void setupSinricPro() {
+  // add device to SinricPro
+  SinricProContactsensor& myContact = SinricPro[CONTACT_ID];
+
+  // setup SinricPro
+  SinricPro.onConnected([](){ Serial.printf("Connected to SinricPro\r\n"); });
+  SinricPro.onDisconnected([](){ Serial.printf("Disconnected from SinricPro\r\n"); });
+  SinricPro.begin(APP_KEY, APP_SECRET);
+}
+
+// main setup function
+void setup() {
+  Serial.begin(BAUD_RATE); Serial.printf("\r\n\r\n");
+
+  pinMode(CONTACT_PIN, INPUT);
+
+  setupWiFi();
+  setupSinricPro();
+}
+
+void loop() {
+  handleContactsensor();
+  SinricPro.handle();
+}
