@@ -8,8 +8,8 @@
 // =================================================================
 
 // --- Rede Wi-Fi ---
-const char* ssid = "Nome do Wi-Fi";
-const char* password = "Senha do Wi-Fi";
+const char* ssid = "BRUGER_2G";
+const char* password = "Gersones68";
 
 // --- Pinos dos Dispositivos 
 #define LAMPADA_PIN 13
@@ -357,6 +357,3 @@ void loop() {
   unsigned long currentMillis = millis();
   if (currentMillis - previousMillis >= intervalo) { previousMillis = currentMillis; logicaControlePrincipal(); }
 }
-Projeto Final Código.txt
-
-Exibindo Projeto Final Código.txt…
