@@ -28,12 +28,27 @@
 #include "SinricPro.h"
 #include "SinricProDimSwitch.h"
 
-#define WIFI_SSID         "YOUR-WIFI-SSID"    
-#define WIFI_PASS         "YOUR-WIFI-PASSWORD"
-#define APP_KEY           "YOUR-APP-KEY"      // Should look like "de0bxxxx-1x3x-4x3x-ax2x-5dabxxxxxxxx"
-#define APP_SECRET        "YOUR-APP-SECRET"   // Should look like "5f36xxxx-x3x7-4x3x-xexe-e86724a9xxxx-4c4axxxx-3x3x-x5xe-x9x3-333d65xxxxxx"
-#define DIMSWITCH_ID      "YOUR-DEVICE-ID"    // Should look like "5dc1564130xxxxxxxxxxxxxx"
-#define BAUD_RATE         115200                // Change baudrate to your need
+#define WIFI_SSID         "BRUGER_2G"    
+#define WIFI_PASS         "Gersones68"
+
+
+
+#define APP_KEY           "89cda427-c430-4127-9a60-afd89f2364d7"
+#define APP_SECRET        "a4993c6e-91d9-4b84-97f6-373c1d78789b-72975cde-8f6e-4ff5-b9a1-b67a298291b5"   
+#define DIMSWITCH_ID      "68cb08fdad5e91d6f437c17e"
+// -----------------------------------------------------------------
+// INÍCIO DAS MODIFICAÇÕES - PINO DO LED
+// -----------------------------------------------------------------
+
+// Define o pino GPIO 13 para o LED (conforme solicitado para o ESP32)
+#define LED_PIN 13 
+
+// -----------------------------------------------------------------
+// FIM DAS MODIFICAÇÕES - PINO DO LED
+// -----------------------------------------------------------------
+
+
+#define BAUD_RATE         115200             // Change baudrate to your need
 
 // we use a struct to store all states and values for our dimmable switch
 struct {
@@ -41,9 +56,47 @@ struct {
   int powerLevel = 0;
 } device_state;
 
+
+// -----------------------------------------------------------------
+// INÍCIO DAS MODIFICAÇÕES - CALLBACKS DE CONTROLE
+// -----------------------------------------------------------------
+
+/**
+ * @brief Função auxiliar para definir o brilho do LED (0-100%)
+ * * Converte o valor 0-100 (do SinricPro) para a escala de PWM
+ * do ESP32 (0-255) e controla o pino do LED.
+ */
+void setPower(int powerLevel) {
+  // 1. Limita o valor de entrada entre 0 (desligado) e 100 (máximo)
+  if (powerLevel < 0)   powerLevel = 0;
+  if (powerLevel > 100) powerLevel = 100;
+
+  // 2. Atualiza as variáveis de estado globais
+  device_state.powerLevel = powerLevel;
+  device_state.powerState = (powerLevel > 0); // Se o brilho for > 0, está ligado
+
+  // 3. Converte a escala 0-100 (SinricPro) para 0-255 (PWM do ESP32)
+  int dutyCycle = map(device_state.powerLevel, 0, 100, 0, 255);
+  
+  // 4. Aplica o brilho (dutyCycle) ao pino 13
+  analogWrite(LED_PIN, dutyCycle);
+}
+
 bool onPowerState(const String &deviceId, bool &state) {
   Serial.printf("Device %s power turned %s \r\n", deviceId.c_str(), state?"on":"off");
-  device_state.powerState = state;
+  
+  if (state) { // Se o comando for LIGAR
+    // Se estava desligado (nível 0), liga no máximo (100).
+    // Se já tinha um nível (ex: 50), apenas restaura esse nível.
+    if (device_state.powerLevel == 0) {
+      setPower(100);
+    } else {
+      setPower(device_state.powerLevel);
+    }
+  } else { // Se o comando for DESLIGAR
+    setPower(0);
+  }
+
   return true; // request handled properly
 }
 
@@ -98,6 +151,20 @@ void setupSinricPro() {
 // main setup function
 void setup() {
   Serial.begin(BAUD_RATE); Serial.printf("\r\n\r\n");
+  
+  // -----------------------------------------------------------------
+  // INÍCIO DAS MODIFICAÇÕES - SETUP DO PINO
+  // -----------------------------------------------------------------
+  
+  // Configura o pino 13 como SAÍDA
+  pinMode(LED_PIN, OUTPUT);     
+  // Garante que o LED começa desligado
+  digitalWrite(LED_PIN, LOW); 
+  
+  // -----------------------------------------------------------------
+  // FIM DAS MODIFICAÇÕES - SETUP DO PINO
+  // -----------------------------------------------------------------
+  
   setupWiFi();
   setupSinricPro();
 }
