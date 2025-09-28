@@ -2,8 +2,8 @@
  * If you encounter any issues:
  * - check the readme.md at https://github.com/sinricpro/esp8266-esp32-sdk/blob/master/README.md
  * - ensure all dependent libraries are installed
- *   - see https://github.com/sinricpro/esp8266-esp32-sdk/blob/master/README.md#arduinoide
- *   - see https://github.com/sinricpro/esp8266-esp32-sdk/blob/master/README.md#dependencies
+ * - see https://github.com/sinricpro/esp8266-esp32-sdk/blob/master/README.md#arduinoide
+ * - see https://github.com/sinricpro/esp8266-esp32-sdk/blob/master/README.md#dependencies
  * - open serial monitor and check whats happening
  * - check full user documentation at https://sinricpro.github.io/esp8266-esp32-sdk
  * - visit https://github.com/sinricpro/esp8266-esp32-sdk/issues and check for existing issues or open a new one
@@ -28,35 +28,71 @@
 #include "SinricPro.h"
 #include "SinricProDimSwitch.h"
 
-#define WIFI_SSID         "YOUR-WIFI-SSID"    
-#define WIFI_PASS         "YOUR-WIFI-PASSWORD"
-#define APP_KEY           "YOUR-APP-KEY"      // Should look like "de0bxxxx-1x3x-4x3x-ax2x-5dabxxxxxxxx"
-#define APP_SECRET        "YOUR-APP-SECRET"   // Should look like "5f36xxxx-x3x7-4x3x-xexe-e86724a9xxxx-4c4axxxx-3x3x-x5xe-x9x3-333d65xxxxxx"
-#define DIMSWITCH_ID      "YOUR-DEVICE-ID"    // Should look like "5dc1564130xxxxxxxxxxxxxx"
-#define BAUD_RATE         115200                // Change baudrate to your need
+#define WIFI_SSID         "BRUGER_2G"    
+#define WIFI_PASS         "Gersones68"
 
-// we use a struct to store all states and values for our dimmable switch
+#define APP_KEY           "89cda427-c430-4127-9a60-afd89f2364d7"      
+#define APP_SECRET        "a4993c6e-91d9-4b84-97f6-373c1d78789b-72975cde-8f6e-4ff5-b9a1-b67a298291b5"   
+#define DIMSWITCH_ID      "68d98569c6b3a7ebd1b62c43"
+
+// MODIFICADO: Definindo o pino do LED para fácil alteração
+#define LED_PIN           13
+
+#define BAUD_RATE         115200          // Change baudrate to your need
+
+// MODIFICADO: Renomeado para myDeviceState para evitar conflitos com a biblioteca
 struct {
   bool powerState = false;
   int powerLevel = 0;
-} device_state;
+} myDeviceState;
 
+// MODIFICADO: Esta função agora controla o LED
 bool onPowerState(const String &deviceId, bool &state) {
   Serial.printf("Device %s power turned %s \r\n", deviceId.c_str(), state?"on":"off");
-  device_state.powerState = state;
+  myDeviceState.powerState = state;
+  
+  if (state) {
+    // Se ligar e o brilho for 0, define como 100%
+    if (myDeviceState.powerLevel == 0) {
+      myDeviceState.powerLevel = 100;
+    }
+    // Mapeia 0-100 para 0-255 e aplica ao LED
+    int dutyCycle = map(myDeviceState.powerLevel, 0, 100, 0, 255);
+    analogWrite(LED_PIN, dutyCycle);
+  } else {
+    // Se desligar, define o brilho como 0
+    analogWrite(LED_PIN, 0);
+  }
+
   return true; // request handled properly
 }
 
+// MODIFICADO: Esta função agora controla o brilho do LED
 bool onPowerLevel(const String &deviceId, int &powerLevel) {
-  device_state.powerLevel = powerLevel;
-  Serial.printf("Device %s power level changed to %d\r\n", deviceId.c_str(), device_state.powerLevel);
+  myDeviceState.powerLevel = powerLevel;
+  Serial.printf("Device %s power level changed to %d\r\n", deviceId.c_str(), myDeviceState.powerLevel);
+  
+  // Mapeia o novo brilho (0-100) para a escala PWM (0-255) e aplica ao LED
+  int dutyCycle = map(myDeviceState.powerLevel, 0, 100, 0, 255);
+  analogWrite(LED_PIN, dutyCycle);
+
   return true;
 }
 
+// MODIFICADO: Esta função agora ajusta o brilho do LED
 bool onAdjustPowerLevel(const String &deviceId, int &levelDelta) {
-  device_state.powerLevel += levelDelta;
-  Serial.printf("Device %s power level changed about %i to %d\r\n", deviceId.c_str(), levelDelta, device_state.powerLevel);
-  levelDelta = device_state.powerLevel;
+  // Ajusta o nível de brilho e garante que ele fique entre 0 e 100
+  myDeviceState.powerLevel += levelDelta;
+  if (myDeviceState.powerLevel < 0) myDeviceState.powerLevel = 0;
+  if (myDeviceState.powerLevel > 100) myDeviceState.powerLevel = 100;
+
+  Serial.printf("Device %s power level changed about %i to %d\r\n", deviceId.c_str(), levelDelta, myDeviceState.powerLevel);
+  
+  // Mapeia o novo brilho para a escala PWM e aplica ao LED
+  int dutyCycle = map(myDeviceState.powerLevel, 0, 100, 0, 255);
+  analogWrite(LED_PIN, dutyCycle);
+  
+  levelDelta = myDeviceState.powerLevel; // Retorna o novo nível para o SinricPro
   return true;
 }
 
@@ -98,6 +134,12 @@ void setupSinricPro() {
 // main setup function
 void setup() {
   Serial.begin(BAUD_RATE); Serial.printf("\r\n\r\n");
+  
+  // MODIFICADO: Configura o pino do LED como saída
+  pinMode(LED_PIN, OUTPUT);
+  // MODIFICADO: Garante que o LED comece desligado
+  digitalWrite(LED_PIN, LOW);
+
   setupWiFi();
   setupSinricPro();
 }
