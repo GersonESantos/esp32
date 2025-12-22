@@ -21,7 +21,8 @@ Adafruit_SSD1306 display(128, 64, &Wire, OLED_RESET);
 
 // Credenciais do WiFi - Substitua pelos seus dados
 const char* ssid = "BRUGER_2G";       // Nome da sua rede WiFi
-const char* password = "Gersones68"; // Senha da sua rede WiFi
+const char* password = "  
+"; // Senha da sua rede WiFi
 
 // Define o pino da lâmpada
 const int lampadaPin = 13;
